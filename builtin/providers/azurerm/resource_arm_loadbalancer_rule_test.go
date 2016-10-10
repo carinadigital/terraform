@@ -79,6 +79,38 @@ func TestAccAzureRMLoadBalancerRule_basic(t *testing.T) {
 	})
 }
 
+func TestAccAzureRMLoadBalancerRule_update(t *testing.T) {
+
+	var lb network.LoadBalancer
+	ri := acctest.RandInt()
+	lbRuleName := fmt.Sprintf("LbRule-%s", acctest.RandStringFromCharSet(8, acctest.CharSetAlpha))
+	alt_lbRuleName := fmt.Sprintf("%s-alt", lbRuleName)
+	preConfig := testAccAzureRMLoadBalancerRule_basic(ri, lbRuleName)
+	postConfig := testAccAzureRMLoadBalancerRule_basic(ri, alt_lbRuleName)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testCheckAzureRMLoadBalancerDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: preConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testCheckAzureRMLoadBalancerExists("azurerm_lb.test", &lb),
+					testCheckAzureRMLoadBalancerRuleExists(lbRuleName, &lb),
+				),
+			},
+
+			resource.TestStep{
+				Config: postConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testCheckAzureRMLoadBalancerExists("azurerm_lb.test", &lb),
+					testCheckAzureRMLoadBalancerRuleExists(alt_lbRuleName, &lb)),
+			},
+		},
+	})
+}
+
 func TestAccAzureRMLoadBalancerRule_removal(t *testing.T) {
 	var lb network.LoadBalancer
 	ri := acctest.RandInt()
